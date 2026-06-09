@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class LogAspect {
 
-    @Pointcut("execution(* com.qx.basicdemo.AOP.service.*.*(..))")
+    @Pointcut("execution(* com.qx.basicdemo.AOP.aop_quick_start_000.*.*(..))")
     public void orderServiceMethods() {
     }
 
