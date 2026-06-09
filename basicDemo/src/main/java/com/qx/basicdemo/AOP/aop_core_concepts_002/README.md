@@ -2,170 +2,183 @@
 
 ## 这一节的目标
 
-学完这节，你要能把下面这句话翻译出来：
+学完这节，你要能把这句话翻译成人话：
 
 `切面通过切点选中目标方法，再用通知完成增强。`
 
-如果这句话你能说顺，AOP 的骨架就已经立住了。
+## 本节代码在哪
 
-## 先只看 3 个词
+这一节只看本目录下 4 个文件：
 
-- `Aspect`：在哪里写“增强逻辑”
-- `Pointcut`：到底拦哪些方法
-- `Advice`：拦到之后具体做什么
+- `AOPApplication.java`
+- `UserService.java`
+- `ConceptAspect.java`
+- `ConceptDemoRunner.java`
 
-这 3 个词不用死背英文，先抓住作用。
+它们分别对应：
 
-## 1. Aspect：切面
+- 启动入口
+- 业务类
+- 切面类
+- 演示入口
 
-切面可以先理解成：
+## 先看业务类
 
-`一个专门用来放公共增强逻辑的类`
-
-比如我们想统一记录日志，就可以专门写一个类去做这件事。
-
-这个类不负责下单，不负责查询，不负责取消订单。
-
-它只负责“增强”。
-
-常见的增强包括：
-
-- 方法执行前打印参数
-- 方法执行后打印结果
-- 发生异常时记录错误
-- 统计方法耗时
-
-所以切面的重点不是“做业务”，而是“给业务加公共能力”。
-
-## 2. Pointcut：切点
-
-切点可以先理解成：
-
-`增强逻辑要作用到谁身上`
-
-也就是，你写了一个切面之后，总得告诉 Spring：
-
-“不是所有方法都要拦，我只拦这一批方法。”
-
-例如：
+[UserService.java](/E:/JavaProjects/BasicDemo/basicDemo/src/main/java/com/qx/basicdemo/AOP/aop_core_concepts_002/UserService.java)
 
 ```java
-@Pointcut("execution(* com.qx.basicdemo.AOP.aop_quick_start_000.*.*(..))")
+@Service
+public class UserService {
+
+    public String register(String username) {
+        System.out.println("执行业务方法: 注册用户 -> " + username);
+        return "注册成功: " + username;
+    }
+}
 ```
 
-你现在先不用逐字符拆解。
+这就是一个很普通的业务类。
 
-在第 002 节里，先把它理解成一句人话：
+它的核心工作只有一个：
 
-`拦截 aop_quick_start_000 包下所有类的所有方法`
+`注册用户`
 
-切点回答的问题只有一个：
+## 1. Aspect 是什么
 
-`你到底要增强哪些方法？`
+[ConceptAspect.java](/E:/JavaProjects/BasicDemo/basicDemo/src/main/java/com/qx/basicdemo/AOP/aop_core_concepts_002/ConceptAspect.java)
 
-## 3. Advice：通知
+```java
+@Aspect
+@Component
+public class ConceptAspect {
+    ...
+}
+```
 
-通知可以先理解成：
+这里的 `ConceptAspect` 就是切面。
 
-`当目标方法被拦到之后，你具体要执行的动作`
+它不是业务类，它不负责“注册用户”。
 
-例如：
+它负责的是“给业务方法加额外动作”。
 
-- `@Before`：方法执行前打印参数
-- `@AfterReturning`：方法正常返回后打印结果
-- `@AfterThrowing`：方法抛异常后记录错误
+所以你可以先记住：
 
-所以通知回答的问题是：
+`Aspect = 专门放增强逻辑的类`
 
-`拦到了，然后呢？`
+## 2. Pointcut 是什么
 
-然后就执行你写的增强逻辑。
+还是看 [ConceptAspect.java](/E:/JavaProjects/BasicDemo/basicDemo/src/main/java/com/qx/basicdemo/AOP/aop_core_concepts_002/ConceptAspect.java)：
+
+```java
+@Pointcut("execution(* com.qx.basicdemo.AOP.aop_core_concepts_002.UserService.*(..))")
+public void userMethods() {
+}
+```
+
+这段代码的作用是：
+
+`把 UserService 里的方法选出来`
+
+你现在先不用死抠 `execution(...)` 的细节。
+
+这一节只要先明白：
+
+`Pointcut = 决定拦哪些方法`
+
+也就是说，切点回答的问题是：
+
+`增强逻辑到底作用到谁身上？`
+
+## 3. Advice 是什么
+
+继续看 [ConceptAspect.java](/E:/JavaProjects/BasicDemo/basicDemo/src/main/java/com/qx/basicdemo/AOP/aop_core_concepts_002/ConceptAspect.java)：
+
+```java
+@Before("userMethods()")
+public void printMethodName(JoinPoint joinPoint) {
+    System.out.println("[Advice] 方法执行前打印方法名: "
+            + joinPoint.getSignature().getName());
+}
+```
+
+这段代码会在目标方法执行前打印方法名。
+
+这里的 `printMethodName(...)` 就是通知。
+
+所以你可以记成：
+
+`Advice = 拦到方法之后要执行的具体动作`
 
 ## 把三者串起来
 
-现在把 3 个概念连成一句完整的话：
+这一节的示例可以这样拆：
 
-1. 先写一个切面 `Aspect`
-2. 在切面里定义切点 `Pointcut`
-3. 再写通知 `Advice`
-4. 当切点匹配到目标方法时，通知就会执行
+1. `UserService.register()` 是目标业务方法
+2. `ConceptAspect` 是切面
+3. `userMethods()` 是切点
+4. `printMethodName()` 是通知
 
-你可以把它理解成一个流程：
+流程就是：
 
-`切面` 里放着规则和动作，
-`切点` 决定命中谁，
-`通知` 决定命中后做什么。
+1. 先调用 `register("tom")`
+2. 切点先判断：这个方法是不是我要拦的
+3. 如果命中，就执行通知
+4. 然后再执行真正的业务方法
 
-## 一个最短的对照例子
+## 如果运行，会看到什么
 
-假设我们有一个业务方法：
+[ConceptDemoRunner.java](/E:/JavaProjects/BasicDemo/basicDemo/src/main/java/com/qx/basicdemo/AOP/aop_core_concepts_002/ConceptDemoRunner.java)
+
+它会调用：
 
 ```java
-createOrder("Java 入门书")
+userService.register("tom");
 ```
 
-如果用 AOP 的视角来看：
+你大致会看到这样的输出顺序：
 
-- `Aspect`：日志类
-- `Pointcut`：指定拦截 `createOrder()` 这个方法，或者它所在的一批方法
-- `Advice`：在方法前打印参数，在方法后打印结果
+```text
+========== 002 概念示例开始 ==========
+[Advice] 方法执行前打印方法名: register
+执行业务方法: 注册用户 -> tom
+主流程收到返回值: 注册成功: tom
+========== 002 概念示例结束 ==========
+```
 
-也就是说：
+这段输出正好能帮你区分三者：
 
-业务方法还是它自己在执行，
-AOP 只是在它的前后补上公共动作。
+- 业务逻辑来自 `UserService`
+- 增强动作来自 `ConceptAspect`
+- 增强之所以会生效，是因为切点选中了 `register()`
 
-## 一个生活化类比
+## 这一节最重要的翻译
 
-把 AOP 想成“门禁 + 监控 + 保安流程”会很好记：
+如果有人说：
 
-- `Aspect`：整个安保系统
-- `Pointcut`：哪些门需要管控
-- `Advice`：进门前登记、出门后记录、出问题时报警
+`切面通过切点选中目标方法，再用通知完成增强。`
 
-这个类比不严谨，但很适合初学阶段建立感觉。
+你现在就可以翻译成：
 
-## 这一节最容易混的地方
-
-很多人刚学时会把 `Aspect` 和 `Advice` 混在一起。
-
-要注意：
-
-- `Aspect` 是“整个增强类”
-- `Advice` 是“增强类里的某一个具体动作”
-
-换句话说：
-
-`Aspect` 像一个部门，
-`Advice` 像部门里的具体岗位。
-
-## 这一节你应该能回答
-
-1. `Aspect` 是什么
-2. `Pointcut` 是什么
-3. `Advice` 是什么
-4. 它们三者之间是什么关系
+1. 先写一个“增强类”
+2. 再指定它要拦哪些方法
+3. 然后定义拦到之后执行什么动作
 
 ## 自测
 
-如果我说：
+看完本节代码后，试着自己回答这 3 个问题：
 
-“我要给订单相关方法统一加日志，并且只拦截订单模块的方法，在调用前打印参数。”
+1. 本节的 `Aspect` 是哪个类
+2. 本节的 `Pointcut` 是哪段代码
+3. 本节的 `Advice` 是哪个方法
 
-那你可以这样拆：
+标准答案是：
 
-- “统一加日志” 是切面的目标
-- “只拦截订单模块的方法” 是切点
-- “调用前打印参数” 是通知
-
-如果你已经能这样拆，说明这节已经过关了。
+- `Aspect`：`ConceptAspect`
+- `Pointcut`：`userMethods()`
+- `Advice`：`printMethodName(...)`
 
 ## 小结
 
 这一节最后只留一句最重要的话：
 
-`Aspect 负责装增强逻辑，Pointcut 负责选目标方法，Advice 负责执行增强动作。`
-
-## 下一节
-
-下一节我们不再停留在概念层，而是专门拆 5 种常见通知分别在什么时候触发。
+`Aspect 是增强类，Pointcut 是筛选规则，Advice 是增强动作。`
