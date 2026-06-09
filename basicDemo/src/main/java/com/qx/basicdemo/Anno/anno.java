@@ -3,10 +3,16 @@ package com.qx.basicdemo.Anno;
 import java.io.IOException;
 
 public class anno {
+    @Deprecated
+    private static final int a = 1;
+
     public static void main(String[] args) throws Exception {
         System.out.println(anno.test());
 
-        anno.a();
+        String str = "123";
+        System.out.println(str.toString());
+
+        System.out.println(a);
     }
 
     static int test() {
@@ -17,21 +23,8 @@ public class anno {
         }
     }
 
-    static void b() throws IOException {
-        throw new IOException();
-    }
-
-    // 修复方案A
-//    void a() {
-//        try {
-//            b();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-    // 修复方案B
-    static void a() throws IOException {
-        b();
+    @Override
+    public String toString() {
+        return "Demo";
     }
 }
