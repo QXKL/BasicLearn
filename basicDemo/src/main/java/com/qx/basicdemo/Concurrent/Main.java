@@ -21,7 +21,7 @@ public class Main {
         if (is_loop) {
             runTaskLoop();  // 循环
         } else {
-            Integer select = 1;
+            Integer select = 9;
             runTask(select);    // 固定，一次性
         }
     }
@@ -193,12 +193,69 @@ class Func {
         System.out.println("最终计数：" + synchronizedCounterByChunk.getCount());
     }
 
+    // 通知与等待
     static void func8() {
+        Restaurant restaurant = new Restaurant();
 
+        // 厨师线程
+        Thread chef = new Thread(() -> {
+            String[] dishes = {"红烧肉", "清蒸鱼", "炒青菜"};
+            for (String dish : dishes) {
+                try {
+                    restaurant.cook(dish);
+                    Thread.sleep(500); // 模拟做菜花的时间
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        // 服务员线程
+        Thread waiter = new Thread(() -> {
+            for (int i = 0; i < 3; i++) {
+                try {
+                    restaurant.serve();
+                    Thread.sleep(500); // 模拟走过去上菜花的时间
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        chef.start();
+        waiter.start();
     }
 
     static void func9() {
+        RestaurantByBlockingQueue restaurant = new RestaurantByBlockingQueue();
 
+        // 厨师线程
+        Thread chef = new Thread(() -> {
+            String[] dishes = {"红烧肉", "清蒸鱼", "炒青菜"};
+            for (String dish : dishes) {
+                try {
+                    restaurant.cook(dish);
+                    Thread.sleep(500); // 模拟做菜时间
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        // 服务员线程
+        Thread waiter = new Thread(() -> {
+            for (int i = 0; i < 3; i++) {
+                try {
+                    restaurant.serve();
+                    Thread.sleep(800); // 模拟上菜时间（比做菜慢）
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        chef.start();
+        waiter.start();
     }
 
     static void func10() {
