@@ -81,21 +81,21 @@ class Func {
     private static final Logger log = LoggerFactory.getLogger(Func.class);
 
     static void func1() {
-        MyThread thread = new MyThread();
+        BasicThread thread = new BasicThread();
         thread.start(); // 启动线程
         System.out.println("主线程也在运行");
     }
 
     static void func2() {
         // 创建线程并传递参数
-        MyThread2 thread2 = new MyThread2(5);
+        ParameterizedThread thread2 = new ParameterizedThread(5);
         thread2.start();
     }
 
     static void func3() {
         // 创建5个线程，每个线程处理不同的数字
         for (int i = 0; i < 5; i++) {
-            MyThread2 thread3 = new MyThread2(i);
+            ParameterizedThread thread3 = new ParameterizedThread(i);
             thread3.start();
         }
         System.out.println("主线程结束");
@@ -104,7 +104,7 @@ class Func {
     static void func4() {
         // 创建5个线程
         for (int i = 0; i < 5; i++) {
-            MyThread3 thread = new MyThread3(i);
+            ImmutableParamThread thread = new ImmutableParamThread(i);
             thread.start();
         }
 
@@ -116,20 +116,20 @@ class Func {
 
     // 竞态
     static void func5() {
-        Counter counter = new Counter();
+        UnsynchronizedCounter unsynchronizedCounter = new UnsynchronizedCounter();
 
         for (int i = 0; i < 1000; i++) {
-            new Thread(counter::increment).start();
+            new Thread(unsynchronizedCounter::increment).start();
         }
 
         temp500s();
 
-        System.out.println("最终计数：" + counter.getCount());
+        System.out.println("最终计数：" + unsynchronizedCounter.getCount());
     }
 
     // 关键字
     static void func6() {
-        CounterBySync counter = new CounterBySync();
+        SynchronizedCounter counter = new SynchronizedCounter();
 
         for (int i = 0; i < 1000; i++) {
             new Thread(counter::increment).start();

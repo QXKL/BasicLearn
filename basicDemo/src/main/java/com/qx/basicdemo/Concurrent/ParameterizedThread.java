@@ -1,10 +1,10 @@
 package com.qx.basicdemo.Concurrent;
 
-public class MyThread2 extends Thread {
-    private int number; // 我们要传递的参数
+public class ParameterizedThread extends Thread {
+    private final int number; // 我们要传递的参数
 
     // 通过构造函数传递参数
-    MyThread2(int number) {
+    ParameterizedThread(int number) {
         this.number = number;
     }
 

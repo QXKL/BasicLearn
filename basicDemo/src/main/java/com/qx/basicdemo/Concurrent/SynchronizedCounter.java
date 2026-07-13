@@ -1,7 +1,7 @@
 package com.qx.basicdemo.Concurrent;
 
 
-public class CounterBySync {
+public class SynchronizedCounter {
     private int count = 0;
 
     public synchronized void increment() {
