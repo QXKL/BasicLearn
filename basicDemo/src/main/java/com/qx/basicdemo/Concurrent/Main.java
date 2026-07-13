@@ -3,31 +3,27 @@ package com.qx.basicdemo.Concurrent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 
 public class Main {
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final Map<Integer, Runnable> taskMap = new HashMap<>();
     private static final boolean is_loop = false;
 
     public static void main(String[] args) throws Exception {
+        // 优化：利用反射自动扫描注册
+        registerTask();
+
         if (is_loop) {
             runTaskLoop();  // 循环
         } else {
-            Integer select = 6;
+            Integer select = 1;
             runTask(select);    // 固定，一次性
         }
-    }
-
-    static {
-        put(1, Func::func1);
-        put(2, Func::func2);
-        put(3, Func::func3);
-        put(4, Func::func4);
-        put(5, Func::func5);
-        put(6, Func::func6);
     }
 
     private static void put(Integer sel, Runnable runnable) {
@@ -76,10 +72,45 @@ public class Main {
 
         scanner.close(); // 循环结束后关闭资源
     }
+
+    static void registerTask() {
+        try {
+            // 1. 获取 Func 类中定义的所有方法
+            Method[] methods = Func.class.getDeclaredMethods();
+
+            for (Method method : methods) {
+                String name = method.getName();
+
+                // 2. 筛选出名字以 "func" 开头的方法
+                if (name.startsWith("func")) {
+                    // 3. 提取方法名后面的数字作为 key（例如 "func6" 提取出 6）
+                    String numStr = name.substring(4);
+                    if (!numStr.isEmpty()) {
+                        int sel = Integer.parseInt(numStr);
+
+                        // 4. 将其包装为 Runnable 并注册
+                        // 由于是 static 方法，method.invoke(null) 即可执行
+                        put(sel, () -> {
+                            try {
+                                method.setAccessible(true); // 确保私有/包访问权限方法也能调
+                                method.invoke(null);
+                            } catch (Exception e) {
+                                logger.info("【系统提示】方法调用失败", e);
+                            }
+                        });
+                    }
+                }
+            }
+            System.out.println("【系统提示】已自动注册 " + taskMap.size() + " 个测试任务。");
+        } catch (Exception e) {
+            System.err.println("自动注册任务失败：" + e.getMessage());
+        }
+
+    }
 }
 
 class Func {
-    private static final Logger log = LoggerFactory.getLogger(Func.class);
+    private static final Logger logger = LoggerFactory.getLogger(Func.class);
 
     static void func1() {
         BasicThread thread = new BasicThread();
@@ -148,17 +179,37 @@ class Func {
         try {
             latch.await(); // 等待所有线程完成
         } catch (InterruptedException e) {
-            log.atInfo().log("所有线程都已完成");
+            logger.atInfo().log("所有线程都已完成");
         }
 
         System.out.println("最终计数：" + counter.getCount());
+    }
+
+    static void func7() {
+
+    }
+
+    static void func8() {
+
+    }
+
+    static void func9() {
+
+    }
+
+    static void func10() {
+
+    }
+
+    static void func11() {
+
     }
 
     private static void tempTime(int ms) {
         try {
             Thread.sleep(ms);  // 等待time毫秒, 确保所有的线程运行完成
         } catch (InterruptedException e) {
-            log.atInfo().log("线程被中断");
+            logger.atInfo().log("线程被中断");
         }
     }
 
