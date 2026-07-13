@@ -186,7 +186,11 @@ class Func {
     }
 
     static void func7() {
+        SynchronizedCounterByChunk synchronizedCounterByChunk = new SynchronizedCounterByChunk();
 
+        synchronizedCounterByChunk.increment();
+
+        System.out.println("最终计数：" + synchronizedCounterByChunk.getCount());
     }
 
     static void func8() {
