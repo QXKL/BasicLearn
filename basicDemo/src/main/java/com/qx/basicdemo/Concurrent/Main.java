@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
 
 public class Main {
     private static final Map<Integer, Runnable> taskMap = new HashMap<>();
@@ -131,11 +132,24 @@ class Func {
     static void func6() {
         SynchronizedCounter counter = new SynchronizedCounter();
 
+        int threadCount = 1000;
+        CountDownLatch latch = new CountDownLatch(threadCount); // 创建一个门闩，初始计数为线程数量
+
         for (int i = 0; i < 1000; i++) {
-            new Thread(counter::increment).start();
+            new Thread(() -> {
+                try {
+                    counter.increment();
+                } finally {
+                    latch.countDown(); // 每个线程完成时，减少门闩计数
+                }
+            }).start();
         }
 
-        temp500s();
+        try {
+            latch.await(); // 等待所有线程完成
+        } catch (InterruptedException e) {
+            log.atInfo().log("所有线程都已完成");
+        }
 
         System.out.println("最终计数：" + counter.getCount());
     }
